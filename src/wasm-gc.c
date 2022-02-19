@@ -31,9 +31,7 @@ wasm_trap_t* __malloc_callback(
 }
 
 int main() {
-  int ret = 0;
   // Set up engine and config.
-  printf("Initializing...\n");
   wasm_config_t *config = wasm_config_new();
   wasmtime_config_static_memory_maximum_size_set(config, 1 << 30);
   assert(config != NULL);
