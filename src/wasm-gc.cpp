@@ -76,7 +76,8 @@ int main() {
   size_t file_size = ftell(file);
   fseek(file, 0L, SEEK_SET);
   wasm_byte_vec_new_uninitialized(&wasm, file_size);
-  assert(fread(wasm.data, file_size, 1, file) == 1);
+  size_t objs_read = fread(wasm.data, file_size, 1, file);
+  assert(objs_read == 1);
   fclose(file);
 
   //Compile WASM module
