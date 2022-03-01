@@ -7,7 +7,7 @@ int* array;
 
 int main()
 {
-	array = (int*)__malloc(100);
+	array = (int*)__malloc(sizeof(int)*100);
 
 	for (int i = 0; i < 100; i++) {
 		array[i] = i;
