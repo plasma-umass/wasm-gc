@@ -6,6 +6,9 @@
 
 static void exit_with_error(const char *message, wasmtime_error_t *error, wasm_trap_t *trap);
 
+wasmtime_memory_t memory;
+wasmtime_context_t *context;
+
 static __attribute__((noinline)) 
 wasm_trap_t* __malloc_callback(
     void *env,
@@ -15,10 +18,9 @@ wasm_trap_t* __malloc_callback(
     wasmtime_val_t *results,
     size_t nresults
 ) {
-  printf("__malloc:\n");
   void *stack_ptr;
   asm ("movq %%rsp, %0" : "=r"(stack_ptr));
-
+  printf("C Stack Top %p Size %d Wasm Stack Base %p Wasm Stack Top %p\n", stack_ptr, args[0].of.i32, args[1].of.i32, args[2].of.i32);
   //Do the garbage collection if necessary
 
   //Do the allocation
@@ -43,7 +45,7 @@ int main() {
   // but here we skip that and specify NULL.
   wasmtime_store_t *store = wasmtime_store_new(engine, NULL, NULL);
   assert(store != NULL);
-  wasmtime_context_t *context = wasmtime_store_context(store);
+  context = wasmtime_store_context(store);
   assert(context != NULL);
 
   wasmtime_error_t *error;
@@ -88,7 +90,7 @@ int main() {
     exit_with_error("failed to compile module", error, NULL);
 
   //Create the __malloc callback that will be called from the WASM module  
-  wasm_functype_t *__malloc_ty = wasm_functype_new_1_1(wasm_valtype_new(WASM_I32), wasm_valtype_new(WASM_I32));
+  wasm_functype_t *__malloc_ty = wasm_functype_new_3_1(wasm_valtype_new(WASM_I32), wasm_valtype_new(WASM_I32), wasm_valtype_new(WASM_I32), wasm_valtype_new(WASM_I32));
   wasmtime_func_t __malloc;
   wasmtime_func_new(context, __malloc_ty, __malloc_callback, NULL, NULL, &__malloc);
   //Add the callback in linker
@@ -106,7 +108,6 @@ int main() {
   assert(ok);
   assert(run.kind == WASMTIME_EXTERN_FUNC);
 
-  wasmtime_memory_t memory;
   wasmtime_extern_t item;
   ok = wasmtime_instance_export_get(context, &instance, "memory", strlen("memory"), &item);
   assert(ok && item.kind == WASMTIME_EXTERN_MEMORY);
@@ -131,6 +132,8 @@ int main() {
     wasmtime_global_get(context, &global, &globalval);
   }
   
+  printf("144: %p\n", wasmtime_memory_data(context, &memory));
+
   //Call _start
   wasmtime_val_t results;
   error = wasmtime_func_call(context, &run.of.func, NULL, 0, NULL, 0, &trap);
@@ -141,7 +144,6 @@ int main() {
   wasmtime_module_delete(module);
   wasmtime_store_delete(store);
   wasm_engine_delete(engine);
-
 
   /**If you want to grow and read memory you can use below functions
   // size_t memory_size = wasmtime_memory_size(context, &memory);
