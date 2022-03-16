@@ -13,7 +13,7 @@ all: test.wasm wasm-gc
 	$(LDPATH)=$(WASM_TIME_C_API)lib ./wasm-gc
 
 clean:
-	- rm -f test.wasm wasm-gc
+	rm -f test.wasm wasm-gc
 
 test.wasm: example/test.c
 	$(CLANG) $< -o $@ -Wl,--allow-undefined -Wl,--export=array -O0

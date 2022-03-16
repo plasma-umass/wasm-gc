@@ -113,6 +113,27 @@ int main() {
   assert(ok && item.kind == WASMTIME_EXTERN_MEMORY);
   memory = item.of.memory;
 
+  size_t memory_size = wasmtime_memory_size(context, &memory);
+  printf("memory_size %ld\n", memory_size);
+  size_t data_size = wasmtime_memory_data_size(context, &memory);
+  printf("data_size %ld\n", data_size);
+  wasm_memorytype_t* memty;
+  memty = wasmtime_memory_type(context, &memory);
+  size_t max;
+  wasmtime_memorytype_maximum(memty, &max);
+  printf("max %ld\n", max);
+  size_t prev_size;
+  error = wasmtime_memory_grow(context, &memory, 16384 - memory_size, &prev_size);
+  printf("memory_size %ld max %ld\n", memory_size, max);
+  if (error != NULL)
+    exit_with_error("failed to instantiate module", error, NULL);
+  memory_size = wasmtime_memory_size(context, &memory);
+  printf("memory_size %ld\n", memory_size);
+  data_size = wasmtime_memory_data_size(context, &memory);
+  printf("data_size %ld\n", data_size);
+  memory_size = wasmtime_memory_size(context, &memory);
+  data_size = wasmtime_memory_data_size(context, &memory);
+
   //Get all other exports
   wasm_exporttype_vec_t exports;
   wasmtime_instancetype_t* instancety = wasmtime_instance_type(context, &instance);
@@ -146,18 +167,6 @@ int main() {
   wasm_engine_delete(engine);
 
   /**If you want to grow and read memory you can use below functions
-  // size_t memory_size = wasmtime_memory_size(context, &memory);
-  // size_t data_size = wasmtime_memory_data_size(context, &memory);
-  // wasm_memorytype_t* memty;
-  // memty = wasmtime_memory_type(context, &memory);
-  // size_t max;
-  // wasmtime_memorytype_maximum(memty, &max);
-  // size_t prev_size;
-  // error = wasmtime_memory_grow(context, &memory, max - memory_size, &prev_size);
-  // if (error != NULL)
-  //   exit_with_error("failed to instantiate module", error, NULL);
-  // memory_size = wasmtime_memory_size(context, &memory);
-  // data_size = wasmtime_memory_data_size(context, &memory);
 
   //Read memory in integers
   // for (int i = 0; i < 40; i+=4) {
